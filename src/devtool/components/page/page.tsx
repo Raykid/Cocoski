@@ -1,41 +1,66 @@
-import { Button, Space } from "antd";
-import React from "react";
-import { testModel } from "../../models/test_model";
+import { GoldenLayout, LayoutConfig } from "golden-layout";
+import "golden-layout/dist/less/goldenlayout-base.less";
+import "golden-layout/dist/less/themes/goldenlayout-dark-theme.less";
+import React, { FC, ReactPortal, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { withStore } from "../../store/store";
-import { sendToPage } from "../../utils/message_util";
+import { NodeTree } from "../node_tree/node_tree";
 import "./page.less";
+
+const panels: { [name: string]: FC } = {
+  NodeTree,
+};
 
 export const Page = withStore(
   () => {
+    const refContainer = useRef<HTMLDivElement>(null);
+
+    const [portals, updatePortals] = useState<ReactPortal[]>([]);
+    const [layout, updateLayout] = useState<GoldenLayout | null>(null);
+
+    useEffect(() => {
+      if (!layout && refContainer.current) {
+        const config: LayoutConfig = {
+          root: {
+            type: "stack",
+            content: [
+              {
+                type: "component",
+                componentType: "NodeTree",
+              },
+            ],
+          },
+        };
+        const layout = new GoldenLayout(refContainer.current);
+        const promisePanelPortal: Promise<ReactPortal>[] = [];
+        for (const panelName in panels) {
+          promisePanelPortal.push(
+            new Promise((resolve) => {
+              const PanelClass = panels[panelName];
+              layout.registerComponentFactoryFunction(
+                panelName,
+                (container) => {
+                  const portal = createPortal(
+                    <PanelClass />,
+                    container.element
+                  );
+                  resolve(portal);
+                }
+              );
+            })
+          );
+        }
+        Promise.all(promisePanelPortal).then(updatePortals);
+        layout.loadLayout(config);
+        updateLayout(layout);
+      }
+    }, [refContainer.current, layout]);
     return (
-      <Space className="page" direction="vertical">
-        <Button
-          onClick={async () => {
-            await sendToPage("log", { datas: ["Hello!", 1, { fuck: "you" }] });
-            console.log("log done.");
-          }}
-        >
-          log
-        </Button>
-        <div>
-          {testModel.selectors.a} {testModel.selectors.b}
-        </div>
-        <Button
-          onClick={() => {
-            testModel.commands.addA(3);
-          }}
-        >
-          Add 3 to a
-        </Button>
-        <Button
-          onClick={() => {
-            testModel.commands.addB(3);
-          }}
-        >
-          Add 3 to b. Won't Refresh before click the button above.
-        </Button>
-      </Space>
+      <div className="page">
+        <div className="panel-container" ref={refContainer} />
+        {portals}
+      </div>
     );
   },
-  () => [testModel.state.a]
+  () => []
 );
