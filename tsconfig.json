@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ES6",
+    "lib": ["ES6", "DOM"],
+    "removeComments": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "strict": true,
+    "strictPropertyInitialization": false,
+    "sourceMap": true,
+    "declaration": true,
+    "stripInternal": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "esModuleInterop": true,
+    "importHelpers": true,
+    "moduleResolution": "node",
+    "downlevelIteration": true,
+    "allowJs": true,
+    "outDir": "dist",
+    "jsx": "react"
+  },
+  "include": ["src"]
+}
