@@ -17,7 +17,7 @@ const panels: { [name: string]: React.ComponentType<{}> } = {
   NodeDetails,
 };
 
-const panelResolves: { [name: string]: (portal: ReactPortal) => void } = {};
+let panelPortals: { [name: string]: ReactPortal };
 
 export const Page = withStore(
   () => {
@@ -25,7 +25,9 @@ export const Page = withStore(
     const { saveConfig } = layoutModel.commands;
     const refContainer = useRef<HTMLDivElement>(null);
     const [layout, updateLayout] = useState<GoldenLayout | null>(null);
-    const [portals, updatePortals] = useState<ReactPortal[]>([]);
+    const [portals, updatePortals] = useState<{ [name: string]: ReactPortal }>(
+      {}
+    );
 
     useEffect(() => {
       if (!layout && refContainer.current) {
@@ -45,42 +47,23 @@ export const Page = withStore(
             layout.updateRootSize(true);
           }, 100)
         );
-        const promisePanelPortal: Promise<ReactPortal>[] = [];
+        updatePortals((panelPortals = {}));
         for (const panelName in panels) {
-          promisePanelPortal.push(
-            new Promise((resolve) => {
-              panelResolves[panelName] = resolve;
-              const PanelClass = panels[panelName];
-              layout.registerComponentFactoryFunction(
-                panelName,
-                (container) => {
-                  const portal = createPortal(
-                    <PanelClass />,
-                    container.element
-                  );
-                  panelResolves[panelName](portal);
-                }
-              );
-            })
-          );
+          const PanelClass = panels[panelName];
+          layout.registerComponentFactoryFunction(panelName, (container) => {
+            panelPortals[panelName] = createPortal(
+              <PanelClass />,
+              container.element
+            );
+            updatePortals({ ...panelPortals });
+          });
         }
-        updatePortals([]);
-        Promise.all(promisePanelPortal).then(updatePortals);
       }
     }, [layout]);
 
     useEffect(() => {
       if (layout) {
-        const promisePanelPortal: Promise<ReactPortal>[] = [];
-        for (const panelName in panels) {
-          promisePanelPortal.push(
-            new Promise((resolve) => {
-              panelResolves[panelName] = resolve;
-            })
-          );
-        }
-        updatePortals([]);
-        Promise.all(promisePanelPortal).then(updatePortals);
+        updatePortals((panelPortals = {}));
         layout.loadLayout(config);
       }
     }, [layout, config]);
@@ -88,7 +71,7 @@ export const Page = withStore(
     return (
       <div className="page">
         <div className="panel-container" ref={refContainer}>
-          {portals}
+          {Object.values(portals)}
         </div>
       </div>
     );
