@@ -10,20 +10,26 @@ const handlerMap: {
 
 export const curTabId = chrome.devtools.inspectedWindow.tabId;
 
-export function injectScript(): void {
-  chrome.devtools.inspectedWindow.eval(`(()=>{
-  if(!window.__Cocoski_script_injected__) {
-    const temp = document.createElement("script");
-    temp.setAttribute("type", "text/javascript");
-    temp.src = "${chrome.runtime.getURL("injected.js")}";
-    temp.onload = function()
-    {
-      this.parentNode.removeChild(this);
-    };
-    document.head.appendChild(temp);
-  }
-})();
-`);
+export function injectScript(): Promise<void> {
+  return new Promise<void>((resolve) => {
+    const cancel = listenFromPage("injectedComplete", () => {
+      cancel();
+      resolve();
+    });
+    chrome.devtools.inspectedWindow.eval(`(()=>{
+      if(!window.__Cocoski_script_injected__) {
+        const temp = document.createElement("script");
+        temp.setAttribute("type", "text/javascript");
+        temp.src = "${chrome.runtime.getURL("injected.js")}";
+        temp.onload = function()
+        {
+          this.parentNode.removeChild(this);
+        };
+        document.head.appendChild(temp);
+      }
+    })();
+    `);
+  });
 }
 
 chrome.runtime.onMessage.addListener(

@@ -1,4 +1,12 @@
+import { NodeSummary } from "./node_summary";
+
 export type MessageTypes = {
+  // tabReloaded
+  tabReloaded: [{ tabId: number }, void];
+
+  // injectedComplete
+  injectedComplete: [void, void];
+
   // log
   log: [
     {
@@ -12,4 +20,7 @@ export type MessageTypes = {
   mutatorGet: [{ name: string }, any];
   mutatorSet: [{ name: string; value: any }, boolean];
   mutatorCall: [{ name: string; args: any[] }, any];
+
+  // node_tree
+  sceneNodeTree: [{ tree: NodeSummary }, void];
 };

@@ -127,7 +127,7 @@ export function listenFromDevTool(
  */
 export function sendToDevTool<T extends keyof MessageTypes>(
   type: T,
-  data: MessageTypes[T][0]
+  data?: MessageTypes[T][0]
 ): Promise<MessageTypes[T][1]>;
 /**
  * 发送消息到 DevTool 页面
