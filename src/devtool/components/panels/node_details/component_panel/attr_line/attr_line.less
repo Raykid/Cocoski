@@ -1,0 +1,33 @@
+.attr-line {
+  display: flex;
+  gap: 1rem;
+
+  .attr-line-name {
+    flex-grow: 0;
+    flex-shrink: 0;
+    width: calc(30% - 1rem);
+  }
+
+  .attr-line-content {
+    flex-grow: 0;
+    flex-shrink: 0;
+    width: 70%;
+    overflow: hidden;
+  }
+}
+
+.attr-line-number {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  .attr-line-number-slider {
+    min-width: 5rem;
+    width: calc(50% - 0.5rem);
+  }
+
+  .attr-line-number-input {
+    width: 50%;
+  }
+}

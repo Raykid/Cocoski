@@ -40,10 +40,18 @@ export function serializeComponent(
           : oriAttr.default
           ? oriAttr.default()
           : undefined;
-      // 特殊处理
       const attr = attrMap[name];
+      // 没有 type 的，通过 value 猜
+      if (!attr.type) {
+        attr.type = typeof attr.value;
+      } else if (typeof attr.type === "object") {
+        attr.type = (attr.type as { name: string }).name;
+      }
+      // 类型首字母小写
+      attr.type = attr.type.charAt(0).toLowerCase() + attr.type.substring(1);
+      // 特殊处理
       switch (attr.type) {
-        case "Object":
+        case "object":
           if (attr.value) {
             const mutator = getMutator(attr.value) || new Mutator(attr.value);
             attr.value = {
