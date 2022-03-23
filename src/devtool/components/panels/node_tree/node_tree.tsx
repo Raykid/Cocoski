@@ -24,7 +24,11 @@ export const NodeTree = withStore(
       updateSearch(searchStr);
     }, [searchStr]);
     const regSearch = useMemo(() => {
-      return new RegExp(search, "i");
+      try {
+        return new RegExp(search, "i");
+      } catch (err) {
+        return null;
+      }
     }, [search]);
 
     const handleNode = useCallback(
@@ -43,7 +47,7 @@ export const NodeTree = withStore(
             return children;
           }, [] as DataNode[]),
         };
-        return regSearch.test(node.name) || data.children!.length > 0
+        return regSearch?.test(node.name) || data.children!.length > 0
           ? data
           : null;
       },
