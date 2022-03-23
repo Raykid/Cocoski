@@ -10,6 +10,10 @@ export function getMutator(target: any): Mutator | null {
   return (target && target[symbolMutate]) || null;
 }
 
+export function getById(id: string): Mutator | null {
+  return mutatorMap[id] || null;
+}
+
 export class Mutator {
   private _id: string;
   get id() {

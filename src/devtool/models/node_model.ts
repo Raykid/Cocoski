@@ -1,14 +1,24 @@
 import { message } from "antd";
 import { NodeSummary } from "../../global/node_summary";
 import { createModel } from "../store/store";
-import { injectScript, listenFromPage } from "../utils/message_util";
+import {
+  injectScript,
+  listenFromPage,
+  sendToPage,
+} from "../utils/message_util";
 import { Visitor } from "../utils/visitor";
+
+let _waitTree: ((tree: NodeSummary) => void) | null = null;
 
 export const nodeModel = createModel({
   name: "Node",
   initState: () => {
     listenFromPage("sceneNodeTree", ({ tree }) => {
       nodeModel.commands.setTree(tree);
+      if (_waitTree) {
+        _waitTree(tree);
+        _waitTree = null;
+      }
     });
     listenFromPage("tabReloaded", ({ tabId }) => {
       if (tabId === chrome.devtools.inspectedWindow.tabId) {
@@ -53,6 +63,12 @@ export const nodeModel = createModel({
   calculators: {
     getVisitor: (state, id: string): Visitor | null => {
       return state.visitorMap[id] || null;
+    },
+    requestNodeTree: () => {
+      return new Promise<NodeSummary>((resolve) => {
+        _waitTree = resolve;
+        sendToPage("requestNodeTree");
+      });
     },
   },
 });

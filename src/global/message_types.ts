@@ -23,4 +23,6 @@ export type MessageTypes = {
 
   // node_tree
   sceneNodeTree: [{ tree: NodeSummary }, void];
+  requestNodeTree: [void, void];
+  logNode: [{ id: string }, void];
 };

@@ -1,14 +1,23 @@
 import { BaseNode } from "cc";
 import { debounce } from "lodash";
 import { NodeSummary } from "../../global/node_summary";
-import { sendToDevTool } from "../utils/message_util";
-import { Mutator } from "../utils/mutator";
+import { listenFromDevTool, sendToDevTool } from "../utils/message_util";
+import { getById, Mutator } from "../utils/mutator";
 
-const mutatorCache: Mutator[] = [];
+const effects: (() => void)[] = [];
 
 function wrapTree(node: BaseNode): NodeSummary {
   const mutator = new Mutator(node);
-  mutatorCache.push(mutator);
+  const { EventType } = window.cc.Node;
+  node.on(EventType.CHILD_ADDED, syncScene);
+  node.on(EventType.CHILD_REMOVED, syncScene);
+  effects.push(() => {
+    if (node.isValid) {
+      node.off(EventType.CHILD_ADDED, syncScene);
+      node.off(EventType.CHILD_REMOVED, syncScene);
+    }
+    mutator.destroy();
+  });
   return {
     id: mutator.id,
     name: node.name,
@@ -20,10 +29,8 @@ function wrapTree(node: BaseNode): NodeSummary {
 const syncScene = debounce(() => {
   const scene = window.cc.director.getScene();
   if (scene) {
-    // 销毁当前 Mutator
-    mutatorCache
-      .splice(0, mutatorCache.length)
-      .forEach((mutator) => mutator.destroy());
+    // 清理 Effects
+    effects.splice(0, effects.length).forEach((effect) => effect());
     // 重新遍历节点树
     const tree = wrapTree(scene);
     sendToDevTool("sceneNodeTree", { tree });
@@ -36,5 +43,16 @@ export function initNodeTree() {
   window.cc.director.on(window.cc.Director.EVENT_AFTER_SCENE_LAUNCH, () => {
     // 场景切换后需要发送最新的节点数据
     syncScene();
+  });
+  // 监听同步请求
+  listenFromDevTool("requestNodeTree", () => {
+    syncScene();
+  });
+  // 监听打印节点
+  listenFromDevTool("logNode", ({ id }) => {
+    const mutator = getById(id);
+    if (mutator) {
+      console.log(mutator.target);
+    }
   });
 }
