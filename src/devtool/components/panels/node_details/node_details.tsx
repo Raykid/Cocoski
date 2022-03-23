@@ -1,18 +1,34 @@
 import { Checkbox, Empty, Input, Space } from "antd";
-import React, { useEffect, useState } from "react";
+import { debounce } from "lodash";
+import React, { useEffect, useMemo, useState } from "react";
 import { nodeModel } from "../../../models/node_model";
 import { withStore } from "../../../store/store";
 import "./node_details.less";
 
 export const NodeDetails = withStore(
   () => {
-    const { curNode } = nodeModel.state;
+    const { nodeTree, curId } = nodeModel.state;
     const { getVisitor } = nodeModel.calculators;
+    const { getNode } = nodeModel.pureCalculators;
 
+    const curNode = useMemo(
+      () => nodeTree && getNode(nodeTree, curId),
+      [nodeTree, curId]
+    );
     const [active, updateActive] = useState(curNode?.active || false);
+    const [name, updateName] = useState(curNode?.name || "");
     useEffect(() => {
       updateActive(curNode?.active || false);
-    }, [curNode]);
+      updateName(curNode?.name || "");
+    }, [curNode?.active, curNode?.name]);
+
+    const syncName = useMemo(
+      () =>
+        debounce((id: string, name: string) => {
+          getVisitor(id)?.set("name", name);
+        }, 300),
+      []
+    );
 
     return (
       <Space className="node-details" direction="vertical">
@@ -26,7 +42,15 @@ export const NodeDetails = withStore(
                 getVisitor(curNode.id)?.set("active", active);
               }}
             />
-            <Input className="node-name" value={curNode.name} />
+            <Input
+              className="node-name"
+              value={name}
+              onChange={(evt) => {
+                const name = evt.target.value;
+                updateName(name);
+                syncName(curNode.id, name);
+              }}
+            />
           </div>
         ) : (
           <Empty />
@@ -34,5 +58,5 @@ export const NodeDetails = withStore(
       </Space>
     );
   },
-  () => [nodeModel.state.curNode]
+  () => [nodeModel.state.nodeTree, nodeModel.state.curId]
 );

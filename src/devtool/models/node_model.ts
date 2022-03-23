@@ -34,7 +34,7 @@ export const nodeModel = createModel({
     });
     return {
       nodeTree: <NodeSummary | null>null,
-      curNode: <NodeSummary | null>null,
+      curId: <string | null>null,
       visitorMap: <Record<string, Visitor>>{},
     };
   },
@@ -48,7 +48,9 @@ export const nodeModel = createModel({
       if (tree) {
         const visitorMap: Record<string, Visitor> = {};
         const handleNode = (node: NodeSummary) => {
-          visitorMap[node.id] = new Visitor(node);
+          visitorMap[node.id] = new Visitor(node, ({ name, value }) => {
+            nodeModel.commands.setNodeAttr({ id: node.id, name, value });
+          });
           node.children.forEach(handleNode);
         };
         handleNode(tree);
@@ -57,16 +59,27 @@ export const nodeModel = createModel({
         state.visitorMap = {};
       }
       // 如果更新后仍然包含之前选中的节点，则继承之。否则移除之
-      if (state.curNode && state.curNode.id in state.visitorMap) {
-        state.curNode = state.visitorMap[state.curNode.id]
-          .target as NodeSummary;
-      } else {
-        state.curNode = null;
+      if (!state.curId || !(state.curId in state.visitorMap)) {
+        state.curId = null;
       }
     },
     selectNode: function (state, id: string | null) {
-      state.curNode =
-        (id && (state.visitorMap[id].target as NodeSummary)) || null;
+      state.curId = id;
+    },
+    setNodeAttr: function (
+      state,
+      data: { id: string; name: string; value: any }
+    ) {
+      const { id, name, value } = data;
+      if (state.nodeTree) {
+        const targetNode: any = nodeModel.pureCalculators.getNode(
+          state.nodeTree,
+          id
+        );
+        if (targetNode) {
+          targetNode[name] = value;
+        }
+      }
     },
   },
   selectors: {},
@@ -74,11 +87,33 @@ export const nodeModel = createModel({
     getVisitor: (state, id: string): Visitor | null => {
       return state.visitorMap[id] || null;
     },
+  },
+  pureCalculators: {
     requestNodeTree: () => {
       return new Promise<NodeSummary>((resolve) => {
         _waitTree = resolve;
         sendToPage("requestNodeTree");
       });
+    },
+    getNode: (tree: NodeSummary, id: string | null): NodeSummary | null => {
+      if (id) {
+        const handleNode = (node: NodeSummary): NodeSummary | null => {
+          if (node.id === id) {
+            return node;
+          } else {
+            for (const child of node.children) {
+              const childNode = handleNode(child);
+              if (childNode) {
+                return childNode;
+              }
+            }
+            return null;
+          }
+        };
+        return handleNode(tree);
+      } else {
+        return null;
+      }
     },
   },
 });

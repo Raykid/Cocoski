@@ -20,6 +20,7 @@ export type MessageTypes = {
   mutatorGet: [{ name: string }, any];
   mutatorSet: [{ name: string; value: any }, boolean];
   mutatorCall: [{ name: string; args: any[] }, any];
+  mutatorSync: [{ name: string; value: any }, void];
 
   // node_tree
   sceneNodeTree: [{ tree: NodeSummary }, void];

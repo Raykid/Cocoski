@@ -154,12 +154,16 @@ export const layoutModel = createModel({
     };
   },
   operations: {
-    saveConfig: function (_, config: any) {
-      const configStr = JSON.stringify(config);
-      window.localStorage.setItem(LAYOUT_KEY, configStr);
-    },
     reset: function (state) {
       state.config = initConfig();
+    },
+  },
+  selectors: {},
+  calculators: {},
+  pureCalculators: {
+    saveConfig: function (config: any) {
+      const configStr = JSON.stringify(config);
+      window.localStorage.setItem(LAYOUT_KEY, configStr);
     },
   },
 });

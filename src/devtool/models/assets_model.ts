@@ -7,4 +7,6 @@ export const assetsModel = createModel({
   },
   operations: {},
   selectors: {},
+  calculators: {},
+  pureCalculators: {},
 });

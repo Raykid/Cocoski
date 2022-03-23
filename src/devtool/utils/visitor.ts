@@ -1,10 +1,11 @@
 import { VISITOR_KEY } from "../../global/visitor_key";
-import { sendToPage } from "./message_util";
+import { listenFromPage, sendToPage } from "./message_util";
 
 const visitorMap: { [id: string]: Visitor } = {};
 
 export class Visitor {
   private _target: { id: string; [key: string]: any };
+  private _cancelListen?: () => void;
 
   public get id() {
     return this._target.id;
@@ -14,9 +15,20 @@ export class Visitor {
     return this._target;
   }
 
-  public constructor(target: { id: string; [key: string]: any }) {
+  public constructor(
+    target: { id: string; [key: string]: any },
+    changeHandler?: (evt: { name: string; value: any }) => void
+  ) {
     this._target = target;
     visitorMap[this.id] = this;
+    this._cancelListen = listenFromPage("mutatorSync", this.id, (evt) => {
+      if (changeHandler) {
+        changeHandler(evt);
+      } else {
+        const { name, value } = evt;
+        this._target[name] = value;
+      }
+    });
   }
 
   public async get(name: string): Promise<any> {
@@ -42,6 +54,10 @@ export class Visitor {
   }
 
   public destroy(): void {
+    if (this._cancelListen) {
+      this._cancelListen();
+      this._cancelListen = undefined;
+    }
     delete visitorMap[this.id];
   }
 }

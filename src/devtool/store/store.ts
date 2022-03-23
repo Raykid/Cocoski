@@ -26,11 +26,14 @@ type CalculatorMap<State> = Record<
   (state: State, ...args: any[]) => any
 >;
 
+type PureCalculatorMap = Record<string, (...args: any[]) => any>;
+
 type Model<
   State extends object,
   Operations extends OperationMap<State>,
   Selectors extends SelectorMap<State>,
-  Calculators extends CalculatorMap<State>
+  Calculators extends CalculatorMap<State>,
+  PureCalculators extends PureCalculatorMap
 > = {
   readonly state: State;
   readonly commands: {
@@ -53,26 +56,37 @@ type Model<
         : never
     ) => ReturnType<Calculators[K]>;
   };
+  readonly pureCalculators: {
+    readonly [K in keyof PureCalculators]: PureCalculators[K];
+  };
 };
 
 type StoreState = {
   [K in keyof typeof modelMap]: typeof modelMap[K]["model"]["state"];
 };
 
-type CreateModelOptions<State, Operations, Selectors, Calculators> = {
+type CreateModelOptions<
+  State,
+  Operations,
+  Selectors,
+  Calculators,
+  PureCalculators
+> = {
   name: string;
   initState: () => State;
   operations?: Operations;
   selectors?: Selectors;
   calculators?: Calculators;
+  pureCalculators?: PureCalculators;
 };
 
 const modelMap: {
   [name: string]: {
-    model: Model<any, any, any, any>;
+    model: Model<any, any, any, any, any>;
     operations: OperationMap<any>;
     selectors: SelectorMap<any>;
     calculators: CalculatorMap<any>;
+    pureCalculators: PureCalculatorMap;
   };
 } = {};
 
@@ -245,16 +259,24 @@ export function createModel<
   State extends object,
   Operations extends OperationMap<State>,
   Selectors extends SelectorMap<State>,
-  Calculators extends CalculatorMap<State>
+  Calculators extends CalculatorMap<State>,
+  PureCalculators extends PureCalculatorMap
 >(
-  options: CreateModelOptions<State, Operations, Selectors, Calculators>
-): Model<State, Operations, Selectors, Calculators> {
+  options: CreateModelOptions<
+    State,
+    Operations,
+    Selectors,
+    Calculators,
+    PureCalculators
+  >
+): Model<State, Operations, Selectors, Calculators, PureCalculators> {
   const {
     name,
     initState,
     operations = {},
     selectors = {},
     calculators = {},
+    pureCalculators = {},
   } = options;
   const commands: any = {};
   for (const key in operations) {
@@ -291,19 +313,37 @@ export function createModel<
       return calculator(model.state, ...args);
     };
   }
-  const model: Model<State, Operations, Selectors, Calculators> = {
+  const _pureCalculators: any = {};
+  for (const key in pureCalculators) {
+    const pureCalculator = pureCalculators[
+      key as keyof typeof pureCalculators
+    ] as (...args: any[]) => any;
+    _pureCalculators[key] = (...args: any[]) => {
+      // 间接调用 pureCalculators 的同名方法
+      return pureCalculator(...args);
+    };
+  }
+  const model: Model<
+    State,
+    Operations,
+    Selectors,
+    Calculators,
+    PureCalculators
+  > = {
     get state() {
       return store.getState()[name];
     },
     commands,
     selectors: _selectors,
     calculators: _calculators,
+    pureCalculators: _pureCalculators,
   };
   modelMap[name] = {
     model,
     operations,
     selectors,
     calculators,
+    pureCalculators,
   };
   store.dispatch({
     type: typeUpdateModel,

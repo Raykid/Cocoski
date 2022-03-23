@@ -12,7 +12,7 @@ import "./node_tree.less";
 
 export const NodeTree = withStore(
   () => {
-    const { nodeTree, curNode, visitorMap } = nodeModel.state;
+    const { nodeTree, visitorMap } = nodeModel.state;
     const { selectNode } = nodeModel.commands;
     const { getVisitor } = nodeModel.calculators;
 
@@ -120,7 +120,7 @@ export const NodeTree = withStore(
       } else {
         return <Empty />;
       }
-    }, [curNode, treeData, checked, expanded, search, visitorMap]);
+    }, [treeData, checked, expanded, search, visitorMap]);
 
     return (
       <div className="node-tree">

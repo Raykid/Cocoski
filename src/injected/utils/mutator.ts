@@ -1,6 +1,6 @@
 import { NEW_KEY } from "../../global/new_key";
 import { VISITOR_KEY } from "../../global/visitor_key";
-import { listenFromDevTool } from "./message_util";
+import { listenFromDevTool, sendToDevTool } from "./message_util";
 
 const mutatorMap: { [id: string]: Mutator } = {};
 
@@ -25,17 +25,27 @@ export class Mutator {
     return this._target;
   }
 
+  private _proxy: any;
+
   private _listens: (() => void)[];
 
   constructor(target: any) {
     this._target = target;
+    this._proxy = new Proxy(target, {
+      set: (target, key, value) => {
+        target[key] = value;
+        // 发送消息
+        sendToDevTool("mutatorSync", this._id, { name: key as string, value });
+        return true;
+      },
+    });
     this._id =
       this.target.uuid || this.target._uuid || `${Date.now()}-${Math.random()}`;
     mutatorMap[this._id] = this;
     // 监听获取属性消息
     this._listens = [
       listenFromDevTool("mutatorGet", this._id, ({ name }) => {
-        const result = this._target[name];
+        const result = this._proxy[name];
         if (result && ["object", "function"].includes(typeof result)) {
           const subMutator = (result[symbolMutate] =
             result[symbolMutate] || new Mutator(result));
@@ -51,13 +61,13 @@ export class Mutator {
         if (isObject && VISITOR_KEY in value) {
           const id = value[VISITOR_KEY];
           if (!id) {
-            this._target[name] = null;
-            return this._target[name] === null;
+            this._proxy[name] = null;
+            return this._proxy[name] === null;
           } else {
             const tempMutator = mutatorMap[id];
             if (tempMutator) {
-              this._target[name] = tempMutator.target;
-              return this._target[name] === tempMutator.target;
+              this._proxy[name] = tempMutator.target;
+              return this._proxy[name] === tempMutator.target;
             } else {
               console.error(
                 `value is invalid. visitorId=${id}, name=${name}, value=${value}`
@@ -71,11 +81,11 @@ export class Mutator {
             const Cls = eval(cls);
             value = new Cls(...args);
           } catch (err) {}
-          this._target[name] = value;
-          return this._target[name] === value;
+          this._proxy[name] = value;
+          return this._proxy[name] === value;
         } else {
-          this._target[name] = value;
-          return this._target[name] === value;
+          this._proxy[name] = value;
+          return this._proxy[name] === value;
         }
       }),
       listenFromDevTool(
@@ -109,11 +119,11 @@ export class Mutator {
             }
           });
           // 调用函数
-          const func = this._target[name];
+          const func = this._proxy[name];
           if (!(func instanceof Function)) {
             throw new Error(`There is no function called ${name}`);
           } else {
-            return func.apply(this._target, args);
+            return func.apply(this._proxy, args);
           }
         }
       ),
@@ -126,5 +136,6 @@ export class Mutator {
       .forEach((handler) => handler());
     delete mutatorMap[this.id];
     this._target = null;
+    this._proxy = null;
   }
 }

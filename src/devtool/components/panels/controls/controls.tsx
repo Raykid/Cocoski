@@ -7,8 +7,8 @@ import "./controls.less";
 
 export const Controls = withStore(
   () => {
-    const { requestNodeTree } = nodeModel.calculators;
     const { reset } = layoutModel.commands;
+    const { requestNodeTree } = nodeModel.pureCalculators;
     return (
       <div className="controls">
         <Space className="button-container">

@@ -22,7 +22,7 @@ let panelPortals: { [name: string]: ReactPortal };
 export const Page = withStore(
   () => {
     const { config } = layoutModel.state;
-    const { saveConfig } = layoutModel.commands;
+    const { saveConfig } = layoutModel.pureCalculators;
     const refContainer = useRef<HTMLDivElement>(null);
     const [layout, updateLayout] = useState<GoldenLayout | null>(null);
     const [portals, updatePortals] = useState<{ [name: string]: ReactPortal }>(
