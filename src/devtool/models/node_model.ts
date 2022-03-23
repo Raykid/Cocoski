@@ -41,7 +41,6 @@ export const nodeModel = createModel({
   operations: {
     setTree: function (state, tree: NodeSummary | null) {
       state.nodeTree = tree;
-      state.curNode = null;
       // 销毁现有 Visitor
       for (const id in state.visitorMap) {
         state.visitorMap[id].destroy();
@@ -57,6 +56,17 @@ export const nodeModel = createModel({
       } else {
         state.visitorMap = {};
       }
+      // 如果更新后仍然包含之前选中的节点，则继承之。否则移除之
+      if (state.curNode && state.curNode.id in state.visitorMap) {
+        state.curNode = state.visitorMap[state.curNode.id]
+          .target as NodeSummary;
+      } else {
+        state.curNode = null;
+      }
+    },
+    selectNode: function (state, id: string | null) {
+      state.curNode =
+        (id && (state.visitorMap[id].target as NodeSummary)) || null;
     },
   },
   selectors: {},

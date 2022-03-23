@@ -11,6 +11,7 @@ import "./node_tree.less";
 export const NodeTree = withStore(
   () => {
     const { nodeTree, curNode } = nodeModel.state;
+    const { selectNode } = nodeModel.commands;
     const { getVisitor } = nodeModel.calculators;
 
     const handleNode = useCallback((node: NodeSummary, checked: string[]) => {
@@ -34,7 +35,9 @@ export const NodeTree = withStore(
         const checked: string[] = [];
         const treeData = handleNode(nodeTree, checked);
         updateChecked(checked);
-        updateExpanded([nodeTree.id]);
+        if (!expanded.includes(nodeTree.id)) {
+          updateExpanded([nodeTree.id, ...expanded]);
+        }
         return treeData;
       } else {
         return null;
@@ -61,6 +64,9 @@ export const NodeTree = withStore(
             onExpand={(expanded) => {
               // 更新显示
               updateExpanded(expanded as string[]);
+            }}
+            onSelect={(_, info) => {
+              selectNode(info.selected ? (info.node.key as string) : null);
             }}
             titleRender={(node) => {
               return (
