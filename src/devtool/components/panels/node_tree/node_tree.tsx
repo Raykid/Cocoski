@@ -1,32 +1,54 @@
-import { PrinterOutlined } from "@ant-design/icons";
-import { Button, message, Space, Tooltip, Tree } from "antd";
+import { CloseOutlined, PrinterOutlined } from "@ant-design/icons";
+import { Button, Empty, Input, message, Space, Tooltip, Tree } from "antd";
 import { DataNode } from "antd/lib/tree";
-import React, { useCallback, useMemo, useState } from "react";
+import { debounce } from "lodash";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { NodeSummary } from "../../../../global/node_summary";
 import { nodeModel } from "../../../models/node_model";
 import { withStore } from "../../../store/store";
 import { sendToPage } from "../../../utils/message_util";
+import { NodeTitle } from "./node_title";
 import "./node_tree.less";
 
 export const NodeTree = withStore(
   () => {
-    const { nodeTree, curNode } = nodeModel.state;
+    const { nodeTree, curNode, visitorMap } = nodeModel.state;
     const { selectNode } = nodeModel.commands;
     const { getVisitor } = nodeModel.calculators;
 
-    const handleNode = useCallback((node: NodeSummary, checked: string[]) => {
-      if (node.active) {
-        checked.push(node.id);
-      }
-      const data: DataNode = {
-        key: node.id,
-        title: node.name,
-        children: node.children.map((child) => {
-          return handleNode(child, checked);
-        }),
-      };
-      return data;
-    }, []);
+    // 搜索框
+    const [search, _updateSearch] = useState("");
+    const updateSearch = useMemo(() => debounce(_updateSearch, 200), []);
+    const [searchStr, updateSearchStr] = useState("");
+    useEffect(() => {
+      updateSearch(searchStr);
+    }, [searchStr]);
+    const regSearch = useMemo(() => {
+      return new RegExp(search, "i");
+    }, [search]);
+
+    const handleNode = useCallback(
+      (node: NodeSummary, checked: string[]) => {
+        if (node.active) {
+          checked.push(node.id);
+        }
+        const data: DataNode = {
+          key: node.id,
+          title: node.name,
+          children: node.children.reduce((children, child) => {
+            const childData = handleNode(child, checked);
+            if (childData) {
+              children.push(childData);
+            }
+            return children;
+          }, [] as DataNode[]),
+        };
+        return regSearch.test(node.name) || data.children!.length > 0
+          ? data
+          : null;
+      },
+      [regSearch]
+    );
 
     const [checked, updateChecked] = useState<string[]>([]);
     const [expanded, updateExpanded] = useState<string[]>([]);
@@ -35,14 +57,14 @@ export const NodeTree = withStore(
         const checked: string[] = [];
         const treeData = handleNode(nodeTree, checked);
         updateChecked(checked);
-        if (!expanded.includes(nodeTree.id)) {
+        if (!search && !expanded.includes(nodeTree.id)) {
           updateExpanded([nodeTree.id, ...expanded]);
         }
         return treeData;
       } else {
         return null;
       }
-    }, [nodeTree]);
+    }, [nodeTree, search, handleNode]);
 
     const tree = useMemo(() => {
       if (treeData) {
@@ -54,7 +76,7 @@ export const NodeTree = withStore(
             checkStrictly
             treeData={[treeData]}
             checkedKeys={checked}
-            expandedKeys={expanded}
+            expandedKeys={search ? Object.keys(visitorMap) : expanded}
             onCheck={(checked, info) => {
               // 更新显示
               updateChecked(checked as string[]);
@@ -71,7 +93,7 @@ export const NodeTree = withStore(
             titleRender={(node) => {
               return (
                 <Space className="node">
-                  <span className="title">{node.title}</span>
+                  <NodeTitle title={node.title as string} search={search} />
                   <Tooltip title="输出至控制台">
                     <Button
                       className="log-button"
@@ -96,11 +118,35 @@ export const NodeTree = withStore(
           />
         );
       } else {
-        return null;
+        return <Empty />;
       }
-    }, [curNode, treeData, checked, expanded]);
+    }, [curNode, treeData, checked, expanded, search, visitorMap]);
 
-    return <div className="node-tree">{tree}</div>;
+    return (
+      <div className="node-tree">
+        <div className="search-container">
+          <Input
+            className="search-bar"
+            value={searchStr}
+            onChange={(evt) => {
+              updateSearchStr(evt.target.value);
+            }}
+            addonAfter={
+              <Button
+                size="small"
+                type="text"
+                icon={<CloseOutlined />}
+                style={{ display: search ? "" : "none" }}
+                onClick={() => {
+                  updateSearchStr("");
+                }}
+              />
+            }
+          />
+        </div>
+        {tree}
+      </div>
+    );
   },
   () => [nodeModel.state]
 );

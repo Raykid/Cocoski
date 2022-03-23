@@ -2,13 +2,26 @@
   position: relative;
   width: 100%;
   height: 100%;
-  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+
+  .search-container {
+    flex-shrink: 0;
+    width: 100%;
+
+    .search-bar {
+      width: 100%;
+    }
+  }
 
   .tree {
-    .node {
-      .title {
-      }
+    width: 100%;
+    height: 100%;
+    overflow: auto;
 
+    .node {
       .log-button {
         opacity: 0;
         transition: opacity 0.3s;
