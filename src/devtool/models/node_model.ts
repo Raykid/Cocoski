@@ -51,6 +51,17 @@ export const nodeModel = createModel({
           visitorMap[node.id] = new Visitor(node, ({ name, value }) => {
             nodeModel.commands.setNodeAttr({ id: node.id, name, value });
           });
+          // 处理节点上的组件
+          node.components.forEach((comp) => {
+            visitorMap[comp.id] = new Visitor(comp, ({ name, value }) => {
+              nodeModel.commands.setCompAttr({
+                nodeId: node.id,
+                compId: comp.id,
+                name,
+                value,
+              });
+            });
+          });
           node.children.forEach(handleNode);
         };
         handleNode(tree);
@@ -78,6 +89,26 @@ export const nodeModel = createModel({
         );
         if (targetNode) {
           targetNode[name] = value;
+        }
+      }
+    },
+    setCompAttr: function (
+      state,
+      data: { nodeId: string; compId: string; name: string; value: any }
+    ) {
+      const { nodeId, compId, name, value } = data;
+      if (state.nodeTree) {
+        const targetNode = nodeModel.pureCalculators.getNode(
+          state.nodeTree,
+          nodeId
+        );
+        if (targetNode) {
+          for (const comp of targetNode.components) {
+            if (comp.id === compId) {
+              (comp as any)[name] = value;
+              break;
+            }
+          }
         }
       }
     },

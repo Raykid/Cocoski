@@ -3,6 +3,7 @@ import { debounce } from "lodash";
 import React, { useEffect, useMemo, useState } from "react";
 import { nodeModel } from "../../../models/node_model";
 import { withStore } from "../../../store/store";
+import { ComponentPanel } from "./component_panel/component_panel";
 import "./node_details.less";
 
 export const NodeDetails = withStore(
@@ -30,28 +31,42 @@ export const NodeDetails = withStore(
       []
     );
 
+    // 组件面板
+    const comps = useMemo(() => {
+      if (curNode?.components) {
+        return curNode.components.map((comp) => {
+          return <ComponentPanel key={comp.id} comp={comp} />;
+        });
+      } else {
+        return null;
+      }
+    }, [curNode?.components]);
+
     return (
       <Space className="node-details" direction="vertical">
         {curNode ? (
-          <div className="node-info">
-            <Checkbox
-              checked={active}
-              onChange={(evt) => {
-                const active = evt.target.checked;
-                updateActive(active);
-                getVisitor(curNode.id)?.set("active", active);
-              }}
-            />
-            <Input
-              className="node-name"
-              value={name}
-              onChange={(evt) => {
-                const name = evt.target.value;
-                updateName(name);
-                syncName(curNode.id, name);
-              }}
-            />
-          </div>
+          <Space direction="vertical" style={{ width: "100%" }}>
+            <div className="node-info">
+              <Checkbox
+                checked={active}
+                onChange={(evt) => {
+                  const active = evt.target.checked;
+                  updateActive(active);
+                  getVisitor(curNode.id)?.set("active", active);
+                }}
+              />
+              <Input
+                className="node-name"
+                value={name}
+                onChange={(evt) => {
+                  const name = evt.target.value;
+                  updateName(name);
+                  syncName(curNode.id, name);
+                }}
+              />
+            </div>
+            {comps}
+          </Space>
         ) : (
           <Empty />
         )}

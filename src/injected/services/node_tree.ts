@@ -3,8 +3,10 @@ import { debounce } from "lodash";
 import { NodeInfo } from "../../global/node_info";
 import { listenFromDevTool, sendToDevTool } from "../utils/message_util";
 import { getById, Mutator } from "../utils/mutator";
+import { serializeComponent } from "../utils/serialize_util";
 
 const effects: (() => void)[] = [];
+const regCompName = /^(.*)<(.+)>$/;
 
 function wrapTree(node: BaseNode): NodeInfo {
   const mutator = new Mutator(node);
@@ -23,6 +25,19 @@ function wrapTree(node: BaseNode): NodeInfo {
     name: node.name,
     active: node.active,
     children: node.children.map(wrapTree),
+    components: node.components.map((comp) => {
+      const mutator = new Mutator(comp);
+      effects.push(() => {
+        mutator.destroy();
+      });
+      const resultName = regCompName.exec(comp.name);
+      return {
+        id: mutator.id,
+        name: (resultName && resultName[2]) || "",
+        enabled: comp.enabled,
+        attrs: serializeComponent(comp),
+      };
+    }),
   };
 }
 
