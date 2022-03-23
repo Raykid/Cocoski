@@ -1,4 +1,4 @@
-import { NodeSummary } from "./node_summary";
+import { NodeInfo } from "./node_info";
 
 export type MessageTypes = {
   // tabReloaded
@@ -23,7 +23,7 @@ export type MessageTypes = {
   mutatorSync: [{ name: string; value: any }, void];
 
   // node_tree
-  sceneNodeTree: [{ tree: NodeSummary }, void];
+  sceneNodeTree: [{ tree: NodeInfo }, void];
   requestNodeTree: [void, void];
   logNode: [{ id: string }, void];
 };

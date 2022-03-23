@@ -3,7 +3,7 @@ import { Button, Empty, Input, message, Space, Tooltip, Tree } from "antd";
 import { DataNode } from "antd/lib/tree";
 import { debounce } from "lodash";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { NodeSummary } from "../../../../global/node_summary";
+import { NodeInfo } from "../../../../global/node_info";
 import { nodeModel } from "../../../models/node_model";
 import { withStore } from "../../../store/store";
 import { sendToPage } from "../../../utils/message_util";
@@ -28,7 +28,7 @@ export const NodeTree = withStore(
     }, [search]);
 
     const handleNode = useCallback(
-      (node: NodeSummary, checked: string[]) => {
+      (node: NodeInfo, checked: string[]) => {
         if (node.active) {
           checked.push(node.id);
         }

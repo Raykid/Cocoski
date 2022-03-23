@@ -1,12 +1,12 @@
 import { BaseNode } from "cc";
 import { debounce } from "lodash";
-import { NodeSummary } from "../../global/node_summary";
+import { NodeInfo } from "../../global/node_info";
 import { listenFromDevTool, sendToDevTool } from "../utils/message_util";
 import { getById, Mutator } from "../utils/mutator";
 
 const effects: (() => void)[] = [];
 
-function wrapTree(node: BaseNode): NodeSummary {
+function wrapTree(node: BaseNode): NodeInfo {
   const mutator = new Mutator(node);
   const { EventType } = window.cc.Node;
   node.on(EventType.CHILD_ADDED, syncScene);

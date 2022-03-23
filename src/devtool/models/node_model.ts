@@ -1,5 +1,5 @@
 import { message } from "antd";
-import { NodeSummary } from "../../global/node_summary";
+import { NodeInfo } from "../../global/node_info";
 import { createModel } from "../store/store";
 import {
   injectScript,
@@ -8,7 +8,7 @@ import {
 } from "../utils/message_util";
 import { Visitor } from "../utils/visitor";
 
-let _waitTree: ((tree: NodeSummary) => void) | null = null;
+let _waitTree: ((tree: NodeInfo) => void) | null = null;
 
 export const nodeModel = createModel({
   name: "Node",
@@ -33,13 +33,13 @@ export const nodeModel = createModel({
       }
     });
     return {
-      nodeTree: <NodeSummary | null>null,
+      nodeTree: <NodeInfo | null>null,
       curId: <string | null>null,
       visitorMap: <Record<string, Visitor>>{},
     };
   },
   operations: {
-    setTree: function (state, tree: NodeSummary | null) {
+    setTree: function (state, tree: NodeInfo | null) {
       state.nodeTree = tree;
       // 销毁现有 Visitor
       for (const id in state.visitorMap) {
@@ -47,7 +47,7 @@ export const nodeModel = createModel({
       }
       if (tree) {
         const visitorMap: Record<string, Visitor> = {};
-        const handleNode = (node: NodeSummary) => {
+        const handleNode = (node: NodeInfo) => {
           visitorMap[node.id] = new Visitor(node, ({ name, value }) => {
             nodeModel.commands.setNodeAttr({ id: node.id, name, value });
           });
@@ -90,14 +90,14 @@ export const nodeModel = createModel({
   },
   pureCalculators: {
     requestNodeTree: () => {
-      return new Promise<NodeSummary>((resolve) => {
+      return new Promise<NodeInfo>((resolve) => {
         _waitTree = resolve;
         sendToPage("requestNodeTree");
       });
     },
-    getNode: (tree: NodeSummary, id: string | null): NodeSummary | null => {
+    getNode: (tree: NodeInfo, id: string | null): NodeInfo | null => {
       if (id) {
-        const handleNode = (node: NodeSummary): NodeSummary | null => {
+        const handleNode = (node: NodeInfo): NodeInfo | null => {
           if (node.id === id) {
             return node;
           } else {
