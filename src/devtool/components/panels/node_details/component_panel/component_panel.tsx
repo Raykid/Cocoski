@@ -21,6 +21,7 @@ export const ComponentPanel = withStore(
       <div className="component-panel">
         <Collapse defaultActiveKey={["1"]}>
           <Collapse.Panel
+            className="collapse-panel"
             key="1"
             header={
               <Space className="component-name">
