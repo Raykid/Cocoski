@@ -21,10 +21,16 @@ type OperationMap<State> = Record<
 
 type SelectorMap<State> = Record<string, (state: State) => any>;
 
+type CalculatorMap<State> = Record<
+  string,
+  (state: State, ...args: any[]) => any
+>;
+
 type Model<
   State extends object,
   Operations extends OperationMap<State>,
-  Selectors extends SelectorMap<State>
+  Selectors extends SelectorMap<State>,
+  Calculators extends CalculatorMap<State>
 > = {
   readonly state: State;
   readonly commands: {
@@ -37,24 +43,36 @@ type Model<
   readonly selectors: {
     readonly [K in keyof Selectors]: ReturnType<Selectors[K]>;
   };
+  readonly calculators: {
+    readonly [K in keyof Calculators]: (
+      ...args: Calculators[K] extends (
+        state: State,
+        ...args: infer R
+      ) => unknown
+        ? R
+        : never
+    ) => ReturnType<Calculators[K]>;
+  };
 };
 
 type StoreState = {
   [K in keyof typeof modelMap]: typeof modelMap[K]["model"]["state"];
 };
 
-type CreateModelOptions<State, Operations, Selectors> = {
+type CreateModelOptions<State, Operations, Selectors, Calculators> = {
   name: string;
   initState: () => State;
   operations?: Operations;
   selectors?: Selectors;
+  calculators?: Calculators;
 };
 
 const modelMap: {
   [name: string]: {
-    model: Model<any, any, any>;
+    model: Model<any, any, any, any>;
     operations: OperationMap<any>;
     selectors: SelectorMap<any>;
+    calculators: CalculatorMap<any>;
   };
 } = {};
 
@@ -226,11 +244,18 @@ export const Provider: FunctionComponent = ({ children }) => {
 export function createModel<
   State extends object,
   Operations extends OperationMap<State>,
-  Selectors extends SelectorMap<State>
+  Selectors extends SelectorMap<State>,
+  Calculators extends CalculatorMap<State>
 >(
-  options: CreateModelOptions<State, Operations, Selectors>
-): Model<State, Operations, Selectors> {
-  const { name, initState, operations = {}, selectors = {} } = options;
+  options: CreateModelOptions<State, Operations, Selectors, Calculators>
+): Model<State, Operations, Selectors, Calculators> {
+  const {
+    name,
+    initState,
+    operations = {},
+    selectors = {},
+    calculators = {},
+  } = options;
   const commands: any = {};
   for (const key in operations) {
     commands[key] = (...args: any[]) => {
@@ -255,17 +280,30 @@ export function createModel<
       },
     });
   }
-  const model: Model<State, Operations, Selectors> = {
+  const _calculators: any = {};
+  for (const key in calculators) {
+    const calculator = calculators[key as keyof typeof calculators] as (
+      state: State,
+      ...args: any[]
+    ) => any;
+    _calculators[key] = (...args: any[]) => {
+      // 间接调用 calculators 的同名方法
+      return calculator(model.state, ...args);
+    };
+  }
+  const model: Model<State, Operations, Selectors, Calculators> = {
     get state() {
       return store.getState()[name];
     },
     commands,
     selectors: _selectors,
+    calculators: _calculators,
   };
   modelMap[name] = {
     model,
     operations,
     selectors,
+    calculators,
   };
   store.dispatch({
     type: typeUpdateModel,

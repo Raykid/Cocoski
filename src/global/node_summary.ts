@@ -1,5 +1,5 @@
 export type NodeSummary = {
-  uuid: string;
+  id: string;
   name: string;
   active: boolean;
   children: NodeSummary[];
