@@ -1,0 +1,32 @@
+.color-picker {
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  border: solid 0.07rem #565656;
+  border-radius: 0.2rem;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s;
+
+  .color {
+    height: 1.2rem;
+  }
+
+  .alpha {
+    background-color: white;
+    height: 0.2rem;
+    border-radius: 0 0 0.1rem 0.1rem;
+  }
+
+  &:hover {
+    border-color: orange;
+  }
+}
+
+.color-picker-picker {
+  .flexbox-fix {
+    color: black;
+  }
+}

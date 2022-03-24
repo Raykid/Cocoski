@@ -41,6 +41,11 @@ export function serializeComponent(
           ? oriAttr.default()
           : undefined;
       const attr = attrMap[name];
+      // 处理 Color 类型
+      if (attr.value instanceof window.cc.Color) {
+        attr.type = "color";
+        attr.value = attr.value._val;
+      }
       // 没有 type 的，通过 value 猜
       if (!attr.type) {
         attr.type = typeof attr.value;
