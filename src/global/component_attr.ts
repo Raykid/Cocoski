@@ -5,6 +5,7 @@ export type ComponentAttr = {
   tooltip?: string;
   hasGetter?: boolean;
   hasSetter?: boolean;
+  readonly?: boolean;
   displayOrder?: number;
   displayName?: string;
   bitmaskList?: { name: string; value: number }[];

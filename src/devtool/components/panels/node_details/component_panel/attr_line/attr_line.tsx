@@ -1,4 +1,4 @@
-import { CheckOutlined, DownOutlined } from "@ant-design/icons";
+import { CheckOutlined, DownOutlined, LockOutlined } from "@ant-design/icons";
 import {
   Button,
   Dropdown,
@@ -298,13 +298,20 @@ export const AttrLine: FC<{
   attr: ComponentAttr;
   onChange: (value: any) => void;
 }> = ({ name, attr, onChange }) => {
-  const { type, tooltip, displayName } = attr;
+  const {
+    type,
+    tooltip,
+    displayName,
+    readonly = false,
+    hasGetter = true,
+    hasSetter = true,
+  } = attr;
   const Attr = type && attrMap[type];
   const nameToShow = useMemo(() => {
     const targetName = displayName || name;
     return targetName.charAt(0).toUpperCase() + targetName.substring(1);
   }, [name, displayName]);
-  return (
+  return hasGetter ? (
     <div className="attr-line">
       <Tooltip
         title={
@@ -317,9 +324,14 @@ export const AttrLine: FC<{
       >
         <div className="attr-line-name">{nameToShow}</div>
       </Tooltip>
-      <div className="attr-line-content">
+      <div
+        className={`attr-line-content ${
+          readonly || !hasSetter ? "readonly" : ""
+        }`}
+      >
+        {(readonly || !hasSetter) && <LockOutlined />}
         {Attr ? <Attr attr={attr} onChange={onChange} /> : JSON.stringify(attr)}
       </div>
     </div>
-  );
+  ) : null;
 };

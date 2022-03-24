@@ -16,6 +16,19 @@
     flex-shrink: 0;
     width: 70%;
     overflow: hidden;
+
+    &.readonly {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      pointer-events: none;
+      filter: opacity(50%);
+
+      .lock {
+        flex-grow: 0;
+        flex-shrink: 0;
+      }
+    }
   }
 }
 
