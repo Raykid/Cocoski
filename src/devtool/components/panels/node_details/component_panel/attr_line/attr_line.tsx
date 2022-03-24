@@ -237,6 +237,59 @@ const attrMap: Record<
       </Dropdown>
     );
   },
+  bitMask: ({ attr, onChange }) => {
+    const [value, updateValue] = useState<number>(attr.value);
+    useEffect(() => {
+      updateValue(attr.value);
+    }, [attr.value]);
+
+    const regSingleBit = useMemo(() => /^0*10*$/, []);
+
+    const [, /* enumMap */ menuItems] = useMemo(() => {
+      const enumMap: Record<number, string> = {};
+      const menuItems: ReactNode[] = [];
+      for (const temp of attr.bitmaskList || []) {
+        enumMap[temp.value] = temp.name;
+        menuItems.push(
+          <Menu.Item
+            icon={
+              regSingleBit.test(temp.value.toString(2)) &&
+              (value & temp.value) === temp.value && <CheckOutlined />
+            }
+            key={temp.value}
+          >
+            {`${temp.name} (${temp.value})`}
+          </Menu.Item>
+        );
+      }
+      return [enumMap, menuItems];
+    }, [attr.bitmaskList, value]);
+
+    return (
+      <Dropdown
+        trigger={["click"]}
+        overlay={
+          <Menu
+            onClick={({ key }) => {
+              let v = parseInt(key);
+              // 单一 bit 是需要切换的，否则是直接赋值
+              if (regSingleBit.test(v.toString(2))) {
+                v = (v & value ? v ^ value : v | value) >>> 0;
+              }
+              updateValue(v);
+              onChange(v);
+            }}
+          >
+            {menuItems}
+          </Menu>
+        }
+      >
+        <Button className="attr-line-enum">
+          {value} <DownOutlined />
+        </Button>
+      </Dropdown>
+    );
+  },
 };
 
 export const AttrLine: FC<{
