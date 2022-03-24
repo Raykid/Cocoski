@@ -34,3 +34,27 @@
     width: 50%;
   }
 }
+
+.attr-line-value-type {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+
+  & > .attr-line {
+    width: calc(50% - 0.5rem);
+    align-items: center;
+  }
+
+  &.single {
+    & > .attr-line {
+      width: 100%;
+    }
+  }
+
+  &.triple {
+    & > .attr-line {
+      width: calc(33.3% - 0.5rem);
+    }
+  }
+}

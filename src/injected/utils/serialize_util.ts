@@ -45,6 +45,9 @@ export function serializeComponent(
       if (attr.value instanceof window.cc.Color) {
         attr.type = "color";
         attr.value = attr.value._val;
+      } else if (attr.value instanceof window.cc.ValueType) {
+        attr.type = "valueType";
+        attr.valueType = `cc.${attr.value.constructor.name}`;
       }
       // 没有 type 的，通过 value 猜
       if (!attr.type) {

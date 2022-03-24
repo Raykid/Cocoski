@@ -43,6 +43,7 @@ const attrMap: Record<
         >
           <InputNumber
             className="attr-line-number-input"
+            size="small"
             value={value}
             step={step}
             min={min}
@@ -70,6 +71,7 @@ const attrMap: Record<
     return (
       <Input
         style={{ width: "100%" }}
+        size="small"
         value={value}
         onChange={(evt) => {
           const value = evt.target.value;
@@ -120,6 +122,56 @@ const attrMap: Record<
           });
         }}
       />
+    );
+  },
+  valueType: ({ attr, onChange }) => {
+    const [valueMap, updateValueMap] = useState<Record<string, any>>(
+      attr.value
+    );
+    useEffect(() => {
+      updateValueMap(attr.value);
+    }, [attr.value]);
+
+    const values = useMemo(() => {
+      const values: { name: string; value: any }[] = [];
+      for (const key in valueMap) {
+        values.push({
+          name: key.charAt(0),
+          value: valueMap[key],
+        });
+      }
+      return values;
+    }, [valueMap]);
+
+    return (
+      <div
+        className={`attr-line-value-type ${
+          values.length === 1 ? "single" : values.length === 3 ? "triple" : ""
+        }`}
+      >
+        {values.map(({ name, value }) => {
+          return (
+            <AttrLine
+              key={name}
+              name={name}
+              attr={{ type: typeof value, value }}
+              onChange={(value) => {
+                const newValueMap = {
+                  ...valueMap,
+                  [name]: value,
+                };
+                updateValueMap(newValueMap);
+                onChange({
+                  [NEW_KEY]: {
+                    cls: attr.valueType,
+                    args: Object.values(newValueMap),
+                  },
+                });
+              }}
+            />
+          );
+        })}
+      </div>
     );
   },
 };
