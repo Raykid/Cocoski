@@ -9,7 +9,7 @@ const effects: (() => void)[] = [];
 const regCompName = /^(.*)<(.+)>$/;
 
 function wrapTree(node: BaseNode): NodeInfo {
-  const mutator = new Mutator(node);
+  const mutatorNode = new Mutator(node);
   const { EventType } = window.cc.Node;
   node.on(EventType.CHILD_ADDED, syncScene);
   node.on(EventType.CHILD_REMOVED, syncScene);
@@ -18,21 +18,22 @@ function wrapTree(node: BaseNode): NodeInfo {
       node.off(EventType.CHILD_ADDED, syncScene);
       node.off(EventType.CHILD_REMOVED, syncScene);
     }
-    mutator.destroy();
+    mutatorNode.destroy();
   });
   return {
-    id: mutator.id,
+    id: mutatorNode.id,
     name: node.name,
     active: node.active,
     children: node.children.map(wrapTree),
     components: node.components.map((comp) => {
-      const mutator = new Mutator(comp);
+      const mutatorComp = new Mutator(comp);
       effects.push(() => {
-        mutator.destroy();
+        mutatorComp.destroy();
       });
       const resultName = regCompName.exec(comp.name);
       return {
-        id: mutator.id,
+        id: mutatorComp.id,
+        nodeId: mutatorNode.id,
         name: (resultName && resultName[2]) || "",
         enabled: comp.enabled,
         attrs: serializeComponent(comp),

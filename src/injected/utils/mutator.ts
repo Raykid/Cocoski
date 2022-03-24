@@ -14,6 +14,10 @@ export function getById(id: string): Mutator | null {
   return mutatorMap[id] || null;
 }
 
+class MutatorSetter {
+  constructor(public toSet: any, public toSync: any) {}
+}
+
 export class Mutator {
   private _id: string;
   get id() {
@@ -33,7 +37,12 @@ export class Mutator {
     this._target = target;
     this._proxy = new Proxy(target, {
       set: (target, key, value) => {
-        target[key] = value;
+        if (value instanceof MutatorSetter) {
+          target[key] = value.toSet;
+          value = value.toSync;
+        } else {
+          target[key] = value;
+        }
         // 发送消息
         sendToDevTool("mutatorSync", this._id, { name: key as string, value });
         return true;
@@ -77,11 +86,11 @@ export class Mutator {
           }
         } else if (isObject && NEW_KEY in value) {
           try {
-            const { cls, args } = value[NEW_KEY];
+            const { cls, args, value: toSync } = value[NEW_KEY];
             const Cls = eval(cls);
             value = new Cls(...args);
+            this._proxy[name] = new MutatorSetter(value, toSync);
           } catch (err) {}
-          this._proxy[name] = value;
           return this._proxy[name] === value;
         } else {
           this._proxy[name] = value;

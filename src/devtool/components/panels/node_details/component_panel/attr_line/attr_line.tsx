@@ -1,6 +1,23 @@
-import { Input, InputNumber, Slider, Switch, Tooltip } from "antd";
+import { CheckOutlined, DownOutlined } from "@ant-design/icons";
+import {
+  Button,
+  Dropdown,
+  Input,
+  InputNumber,
+  Menu,
+  Slider,
+  Switch,
+  Tooltip,
+} from "antd";
 import { debounce } from "lodash";
-import React, { ComponentType, FC, useEffect, useMemo, useState } from "react";
+import React, {
+  ComponentType,
+  FC,
+  ReactNode,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { ComponentAttr } from "../../../../../../global/component_attr";
 import { NEW_KEY } from "../../../../../../global/new_key";
 import { ColorPicker } from "../color_picker/color_picker";
@@ -118,6 +135,7 @@ const attrMap: Record<
             [NEW_KEY]: {
               cls: "cc.Color",
               args: [r, g, b, a],
+              value,
             },
           });
         }}
@@ -165,6 +183,7 @@ const attrMap: Record<
                   [NEW_KEY]: {
                     cls: attr.valueType,
                     args: Object.values(newValueMap),
+                    value: newValueMap,
                   },
                 });
               }}
@@ -172,6 +191,50 @@ const attrMap: Record<
           );
         })}
       </div>
+    );
+  },
+  enum: ({ attr, onChange }) => {
+    const [value, updateValue] = useState<number>(attr.value);
+    useEffect(() => {
+      updateValue(attr.value);
+    }, [attr.value]);
+
+    const [enumMap, menuItems] = useMemo(() => {
+      const enumMap: Record<number, string> = {};
+      const menuItems: ReactNode[] = [];
+      for (const temp of attr.enumList || []) {
+        enumMap[temp.value] = temp.name;
+        menuItems.push(
+          <Menu.Item
+            icon={value === temp.value && <CheckOutlined />}
+            key={temp.value}
+          >
+            {temp.name}
+          </Menu.Item>
+        );
+      }
+      return [enumMap, menuItems];
+    }, [attr.enumList, value]);
+
+    return (
+      <Dropdown
+        trigger={["click"]}
+        overlay={
+          <Menu
+            onClick={({ key }) => {
+              const value = parseInt(key);
+              updateValue(value);
+              onChange(value);
+            }}
+          >
+            {menuItems}
+          </Menu>
+        }
+      >
+        <Button className="attr-line-enum">
+          {enumMap[value]} <DownOutlined />
+        </Button>
+      </Dropdown>
     );
   },
 };
@@ -189,7 +252,15 @@ export const AttrLine: FC<{
   }, [name, displayName]);
   return (
     <div className="attr-line">
-      <Tooltip title={tooltip || nameToShow}>
+      <Tooltip
+        title={
+          tooltip
+            ? tooltip.startsWith("i18n:")
+              ? nameToShow
+              : tooltip
+            : nameToShow
+        }
+      >
         <div className="attr-line-name">{nameToShow}</div>
       </Tooltip>
       <div className="attr-line-content">

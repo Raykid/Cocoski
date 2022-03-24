@@ -94,7 +94,12 @@ export const nodeModel = createModel({
     },
     setCompAttr: function (
       state,
-      data: { nodeId: string; compId: string; name: string; value: any }
+      data: {
+        nodeId: string;
+        compId: string;
+        name: string;
+        value: any;
+      }
     ) {
       const { nodeId, compId, name, value } = data;
       if (state.nodeTree) {
@@ -105,7 +110,14 @@ export const nodeModel = createModel({
         if (targetNode) {
           for (const comp of targetNode.components) {
             if (comp.id === compId) {
-              (comp as any)[name] = value;
+              if (name in comp) {
+                (comp as any)[name] = value;
+              } else {
+                const target = comp.attrs[name];
+                if (target) {
+                  target.value = value;
+                }
+              }
               break;
             }
           }
