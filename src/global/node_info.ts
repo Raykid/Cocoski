@@ -1,3 +1,4 @@
+import { ComponentAttr } from "./component_attr";
 import { NodeComponent } from "./node_component";
 
 export type NodeInfo = {
@@ -5,5 +6,11 @@ export type NodeInfo = {
   name: string;
   active: boolean;
   children: NodeInfo[];
+  info?: {
+    position: ComponentAttr;
+    eulerAngles: ComponentAttr;
+    scale: ComponentAttr;
+    layer: ComponentAttr;
+  };
   components: NodeComponent[];
 };

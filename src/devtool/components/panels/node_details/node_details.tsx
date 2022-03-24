@@ -65,6 +65,20 @@ export const NodeDetails = withStore(
                 }}
               />
             </div>
+            {/* Node 面板 */}
+            {curNode.info && (
+              <ComponentPanel
+                comp={{
+                  id: curNode.id,
+                  nodeId: curNode.id,
+                  enabled: true,
+                  name: "Node",
+                  attrs: curNode.info,
+                }}
+                hasEnabled={false}
+              />
+            )}
+            {/* Component 面板 */}
             {comps}
           </Space>
         ) : (

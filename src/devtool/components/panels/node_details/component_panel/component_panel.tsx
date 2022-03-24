@@ -12,8 +12,8 @@ const registerPanel: Record<
 > = {};
 
 export const ComponentPanel = withStore(
-  (props: { comp: NodeComponent }) => {
-    const { comp } = props;
+  (props: { comp: NodeComponent; hasEnabled?: boolean }) => {
+    const { comp, hasEnabled = true } = props;
     const { getVisitor } = nodeModel.calculators;
     const Panel = registerPanel[comp.name] || CommonPanel;
 
@@ -25,17 +25,19 @@ export const ComponentPanel = withStore(
             key="1"
             header={
               <Space className="component-name">
-                <Checkbox
-                  checked={comp.enabled}
-                  onClick={(evt) => {
-                    evt.stopPropagation();
-                  }}
-                  onChange={(evt) => {
-                    const checked = evt.target.checked;
-                    const visitor = getVisitor(comp.id);
-                    visitor?.set("enabled", checked);
-                  }}
-                />
+                {hasEnabled && (
+                  <Checkbox
+                    checked={comp.enabled}
+                    onClick={(evt) => {
+                      evt.stopPropagation();
+                    }}
+                    onChange={(evt) => {
+                      const checked = evt.target.checked;
+                      const visitor = getVisitor(comp.id);
+                      visitor?.set("enabled", checked);
+                    }}
+                  />
+                )}
                 <b>{comp.name}</b>
               </Space>
             }

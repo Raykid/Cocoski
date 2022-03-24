@@ -1,4 +1,4 @@
-import { BaseNode } from "cc";
+import { BaseNode, Node } from "cc";
 import { debounce } from "lodash";
 import { NodeInfo } from "../../global/node_info";
 import { listenFromDevTool, sendToDevTool } from "../utils/message_util";
@@ -20,11 +20,68 @@ function wrapTree(node: BaseNode): NodeInfo {
     }
     mutatorNode.destroy();
   });
+  const regNumber = /^\d+$/;
+  const regSingle = /^0*10*$/;
   return {
     id: mutatorNode.id,
     name: node.name,
     active: node.active,
     children: node.children.map(wrapTree),
+    info:
+      node instanceof Node
+        ? {
+            position: {
+              type: "valueType",
+              valueType: "cc.Vec3",
+              value: {
+                x: node.position.x,
+                y: node.position.y,
+                z: node.position.z,
+              },
+            },
+            eulerAngles: {
+              type: "valueType",
+              valueType: "cc.Vec3",
+              displayName: "rotation",
+              value: {
+                x: node.eulerAngles.x,
+                y: node.eulerAngles.y,
+                z: node.eulerAngles.z,
+              },
+            },
+            scale: {
+              type: "valueType",
+              valueType: "cc.Vec3",
+              value: {
+                x: node.scale.x,
+                y: node.scale.y,
+                z: node.scale.z,
+              },
+            },
+            layer: {
+              type: "enum",
+              value: node.layer,
+              enumList: Object.keys(window.cc.Layers.Enum).reduce(
+                (enumList, key) => {
+                  if (!regNumber.test(key)) {
+                    const value: number = (window.cc.Layers.Enum as any)[key];
+                    if (regSingle.test(value.toString(2))) {
+                      enumList.push({
+                        name: key,
+                        value,
+                      });
+                    }
+                  }
+                  return enumList;
+                },
+                [] as {
+                  name: string;
+                  value: number;
+                }[]
+              ),
+            },
+          }
+        : undefined,
     components: node.components.map((comp) => {
       const mutatorComp = new Mutator(comp);
       effects.push(() => {

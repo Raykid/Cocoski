@@ -62,6 +62,7 @@ const attrMap: Record<
             className="attr-line-number-input"
             size="small"
             value={value}
+            precision={step.toString().split(".")[1]?.length || 0}
             step={step}
             min={min}
             max={max}
