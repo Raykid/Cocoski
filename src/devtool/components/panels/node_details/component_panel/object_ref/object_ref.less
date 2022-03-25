@@ -1,0 +1,80 @@
+.object-ref {
+  position: relative;
+  width: 100%;
+  margin-top: 1rem;
+
+  .object-ref-tag {
+    position: absolute;
+    left: 0.3rem;
+    top: -0.74rem;
+    height: 0.8rem;
+    font-size: 0.5rem;
+    background-color: rgb(20, 20, 20);
+    border: solid 0.07rem grey;
+    border-bottom: none;
+    border-radius: 0.3rem 0.3rem 0 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0 0.5rem;
+    transition: all 0.3s;
+  }
+
+  .object-ref-container {
+    width: 100%;
+    height: 1.8rem;
+    background-color: rgb(23, 125, 220);
+    border: solid 0.07rem grey;
+    border-radius: 0.3rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    overflow: hidden;
+    padding-left: 0.5rem;
+    transition: all 0.3s;
+    cursor: pointer;
+
+    .object-ref-button-container {
+      display: flex;
+      align-items: center;
+
+      .object-ref-clear-button {
+        display: block;
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+
+      .object-ref-ref-button {
+        background-color: rgb(20, 20, 20);
+      }
+    }
+
+    &.blank {
+      color: grey;
+      background-color: rgb(20, 20, 20);
+      cursor: default;
+
+      .object-ref-button-container {
+        .object-ref-clear-button {
+          display: none;
+        }
+      }
+    }
+  }
+
+  &:hover {
+    .object-ref-tag {
+      border-color: orange;
+    }
+
+    .object-ref-container {
+      border-color: orange;
+
+      .object-ref-button-container {
+        .object-ref-clear-button {
+          opacity: 1;
+        }
+      }
+    }
+  }
+}

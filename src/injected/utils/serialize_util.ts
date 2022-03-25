@@ -31,6 +31,7 @@ export function serializeComponent(
     // visible 显式设置为 false 的不处理
     if (oriAttr.visible !== false) {
       const tempAttr = { ...oriAttr };
+      const ctor = tempAttr.ctor;
       delete tempAttr.ctor;
       delete tempAttr.default;
       attrMap[name] = tempAttr;
@@ -62,6 +63,7 @@ export function serializeComponent(
         case "object":
           if (attr.value) {
             const mutator = getMutator(attr.value) || new Mutator(attr.value);
+            attr.valueType = `cc.${(ctor || attr.value.constructor)?.name}`;
             attr.value = {
               [VISITOR_KEY]: mutator.id,
             };

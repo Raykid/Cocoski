@@ -20,7 +20,9 @@ import React, {
 } from "react";
 import { ComponentAttr } from "../../../../../../global/component_attr";
 import { NEW_KEY } from "../../../../../../global/new_key";
+import { VISITOR_KEY } from "../../../../../../global/visitor_key";
 import { ColorPicker } from "../color_picker/color_picker";
+import { ObjectRef } from "../object_ref/object_ref";
 import "./attr_line.less";
 
 const attrMap: Record<
@@ -289,6 +291,22 @@ const attrMap: Record<
           {value} <DownOutlined />
         </Button>
       </Dropdown>
+    );
+  },
+  object: ({ attr, onChange }) => {
+    const id = attr.value && attr.value[VISITOR_KEY];
+    return (
+      <ObjectRef
+        type={attr.valueType}
+        id={id}
+        onChange={(id) => {
+          if (id) {
+            onChange({ [VISITOR_KEY]: id });
+          } else {
+            onChange(null);
+          }
+        }}
+      />
     );
   },
 };
