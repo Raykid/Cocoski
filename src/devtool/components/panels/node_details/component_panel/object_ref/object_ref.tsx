@@ -1,4 +1,8 @@
-import { CloseCircleTwoTone, SelectOutlined } from "@ant-design/icons";
+import {
+  CloseCircleTwoTone,
+  FireFilled,
+  SelectOutlined,
+} from "@ant-design/icons";
 import { Button, Tooltip } from "antd";
 import React, { useMemo } from "react";
 import { nodeModel } from "../../../../../models/node_model";
@@ -22,6 +26,7 @@ export const ObjectRef = withStore(
     return (
       <div className="object-ref">
         <div className={`object-ref-tag ${type?.replace(/\.+/g, "_") || ""}`}>
+          <FireFilled style={{ color: "rgb(23, 125, 220)" }} />
           {type || ""}
         </div>
         <div className={`object-ref-container ${visitor ? "" : "blank"}`}>
