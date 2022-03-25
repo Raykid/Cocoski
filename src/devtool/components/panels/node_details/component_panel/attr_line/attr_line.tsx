@@ -1,11 +1,10 @@
-import { CheckOutlined, DownOutlined, LockOutlined } from "@ant-design/icons";
+import { CheckOutlined, LockOutlined } from "@ant-design/icons";
 import {
-  Button,
-  Dropdown,
   Input,
   InputNumber,
-  Menu,
+  Select,
   Slider,
+  Space,
   Switch,
   Tooltip,
 } from "antd";
@@ -202,42 +201,38 @@ const attrMap: Record<
       updateValue(attr.value);
     }, [attr.value]);
 
-    const [enumMap, menuItems] = useMemo(() => {
+    const [enumMap, options] = useMemo(() => {
       const enumMap: Record<number, string> = {};
-      const menuItems: ReactNode[] = [];
+      const options: ReactNode[] = [];
       for (const temp of attr.enumList || []) {
         enumMap[temp.value] = temp.name;
-        menuItems.push(
-          <Menu.Item
-            icon={value === temp.value && <CheckOutlined />}
-            key={temp.value}
-          >
-            {temp.name}
-          </Menu.Item>
+        options.push(
+          <Select.Option key={temp.value} value={temp.value}>
+            <Space>
+              {value === temp.value && (
+                <CheckOutlined style={{ color: "rgb(23, 125, 220)" }} />
+              )}
+              {temp.name}
+            </Space>
+          </Select.Option>
         );
       }
-      return [enumMap, menuItems];
+      return [enumMap, options];
     }, [attr.enumList, value]);
 
     return (
-      <Dropdown
-        trigger={["click"]}
-        overlay={
-          <Menu
-            onClick={({ key }) => {
-              const value = parseInt(key);
-              updateValue(value);
-              onChange(value);
-            }}
-          >
-            {menuItems}
-          </Menu>
-        }
+      <Select
+        className="attr-line-enum"
+        size="small"
+        value={enumMap[value]}
+        onChange={(value) => {
+          const v = parseInt(value);
+          updateValue(v);
+          onChange(v);
+        }}
       >
-        <Button className="attr-line-enum">
-          {enumMap[value]} <DownOutlined />
-        </Button>
-      </Dropdown>
+        {options}
+      </Select>
     );
   },
   bitMask: ({ attr, onChange }) => {
@@ -248,49 +243,50 @@ const attrMap: Record<
 
     const regSingleBit = useMemo(() => /^0*10*$/, []);
 
-    const [, /* enumMap */ menuItems] = useMemo(() => {
+    const [enumMap, options] = useMemo(() => {
       const enumMap: Record<number, string> = {};
-      const menuItems: ReactNode[] = [];
+      const options: ReactNode[] = [];
       for (const temp of attr.bitmaskList || []) {
-        enumMap[temp.value] = temp.name;
-        menuItems.push(
-          <Menu.Item
-            icon={
-              regSingleBit.test(temp.value.toString(2)) &&
-              (value & temp.value) === temp.value && <CheckOutlined />
-            }
-            key={temp.value}
-          >
-            {`${temp.name} (${temp.value})`}
-          </Menu.Item>
-        );
+        if (regSingleBit.test(temp.value.toString(2))) {
+          enumMap[temp.value] = temp.name;
+          options.push(
+            <Select.Option key={temp.value} value={temp.value}>
+              {temp.name}
+            </Select.Option>
+          );
+        }
       }
-      return [enumMap, menuItems];
+      return [enumMap, options];
     }, [attr.bitmaskList, value]);
 
-    return (
-      <Dropdown
-        trigger={["click"]}
-        overlay={
-          <Menu
-            onClick={({ key }) => {
-              let v = parseInt(key);
-              // 单一 bit 是需要切换的，否则是直接赋值
-              if (regSingleBit.test(v.toString(2))) {
-                v = (v & value ? v ^ value : v | value) >>> 0;
-              }
-              updateValue(v);
-              onChange(v);
-            }}
-          >
-            {menuItems}
-          </Menu>
+    const values = useMemo(() => {
+      const values: number[] = [];
+      for (let i = 0; i < 32; i++) {
+        const temp = (1 << i) >>> 0;
+        if ((temp & value) !== 0 && temp in enumMap) {
+          values.push(temp);
         }
+      }
+      return values;
+    }, [value, enumMap]);
+
+    return (
+      <Select
+        className="attr-line-enum"
+        size="small"
+        mode="multiple"
+        allowClear
+        value={values}
+        onChange={(values) => {
+          const value = values.reduce((value, temp) => {
+            return value | temp;
+          }, 0);
+          updateValue(value);
+          onChange(value);
+        }}
       >
-        <Button className="attr-line-enum">
-          {value} <DownOutlined />
-        </Button>
-      </Dropdown>
+        {options}
+      </Select>
     );
   },
   object: ({ attr, onChange }) => {
