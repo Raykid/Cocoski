@@ -1,33 +1,39 @@
 .attr-line {
   display: flex;
-  gap: 1rem;
+  align-items: center;
 
   .attr-line-name {
     flex-grow: 0;
     flex-shrink: 0;
-    width: calc(30% - 1rem);
+    width: 25%;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
 
-  .attr-line-content {
+  .lock {
     flex-grow: 0;
     flex-shrink: 0;
-    width: 70%;
-    overflow: hidden;
+    pointer-events: none;
+    opacity: 0;
+    margin-right: 0.3rem;
+  }
 
-    &.readonly {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
+  .attr-line-content {
+    position: relative;
+    flex-grow: 1;
+    flex-shrink: 1;
+    overflow: hidden;
+  }
+
+  &.readonly {
+    .lock {
+      opacity: 0.5;
+    }
+
+    .attr-line-content {
       pointer-events: none;
       opacity: 0.5;
-
-      .lock {
-        flex-grow: 0;
-        flex-shrink: 0;
-      }
     }
   }
 }
@@ -40,11 +46,11 @@
 
   .attr-line-number-slider {
     min-width: 5rem;
-    width: calc(50% - 0.5rem);
+    flex: 1;
   }
 
   .attr-line-number-input {
-    width: 50%;
+    flex: 1;
   }
 }
 
@@ -59,8 +65,9 @@
     align-items: center;
     gap: 0.2rem;
 
-    .attr-line-name {
-      width: 1rem;
+    .attr-line-name,
+    .lock {
+      display: none;
     }
   }
 

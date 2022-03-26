@@ -29,7 +29,7 @@ const attrMap: Record<
   ComponentType<{ attr: ComponentAttr; onChange: (value: any) => void }>
 > = {
   number: ({ attr, onChange }) => {
-    const { step = 0.01, min, max, slide } = attr;
+    const { step = 0.01, min, max, slide, addonBefore } = attr;
     const [value, updateValue] = useState<number>(attr.value);
     useEffect(() => {
       updateValue(attr.value);
@@ -67,6 +67,7 @@ const attrMap: Record<
             step={step}
             min={min}
             max={max}
+            addonBefore={addonBefore}
             style={{ width: "100%" }}
             onChange={(value) => {
               updateValue(value);
@@ -92,6 +93,7 @@ const attrMap: Record<
         style={{ width: "100%" }}
         size="small"
         value={value}
+        addonBefore={attr.addonBefore}
         onChange={(evt) => {
           const value = evt.target.value;
           updateValue(value);
@@ -156,7 +158,7 @@ const attrMap: Record<
       const values: { name: string; value: any }[] = [];
       for (const key in valueMap) {
         values.push({
-          name: key.charAt(0),
+          name: key,
           value: valueMap[key],
         });
       }
@@ -173,8 +175,12 @@ const attrMap: Record<
           return (
             <AttrLine
               key={name}
-              name={name}
-              attr={{ type: typeof value, value }}
+              name=""
+              attr={{
+                type: typeof value,
+                value,
+                addonBefore: name.charAt(0).toUpperCase(),
+              }}
               onChange={(value) => {
                 const newValueMap = {
                   ...valueMap,
@@ -293,6 +299,7 @@ const attrMap: Record<
     const id = attr.value && attr.value[VISITOR_KEY];
     return (
       <ObjectRef
+        refType={attr.refType}
         type={attr.valueType}
         id={id}
         onChange={(id) => {
@@ -326,7 +333,7 @@ export const AttrLine: FC<{
     return targetName.charAt(0).toUpperCase() + targetName.substring(1);
   }, [name, displayName]);
   return hasGetter ? (
-    <div className="attr-line">
+    <div className={`attr-line ${readonly || !hasSetter ? "readonly" : ""}`}>
       <Tooltip
         title={
           tooltip
@@ -338,12 +345,8 @@ export const AttrLine: FC<{
       >
         <div className="attr-line-name">{nameToShow}</div>
       </Tooltip>
-      <div
-        className={`attr-line-content ${
-          readonly || !hasSetter ? "readonly" : ""
-        }`}
-      >
-        {(readonly || !hasSetter) && <LockOutlined />}
+      <LockOutlined className="lock" />
+      <div className="attr-line-content">
         {Attr ? <Attr attr={attr} onChange={onChange} /> : JSON.stringify(attr)}
       </div>
     </div>

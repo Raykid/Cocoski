@@ -10,23 +10,36 @@ import { withStore } from "../../../../../store/store";
 import "./object_ref.less";
 
 export type ObjectRefProps = {
+  refType?: string;
   type?: string;
   id?: string;
   onChange: (id?: string) => void;
 };
 
 export const ObjectRef = withStore(
-  ({ onChange, type, id }: ObjectRefProps) => {
+  ({ refType, type, id, onChange }: ObjectRefProps) => {
     const { visitorMap } = nodeModel.state;
 
     const visitor = useMemo(() => {
       return id ? visitorMap[id] || null : null;
     }, [visitorMap, id]);
-    onChange;
+
+    const iconColor = useMemo(() => {
+      switch (refType) {
+        case "cc.Node":
+          return "rgb(65, 215, 0)";
+        case "internal":
+          return "rgb(23, 125, 220)";
+        case "custom":
+        default:
+          return "rgb(240, 200, 0)";
+      }
+    }, [refType]);
+
     return (
       <div className="object-ref">
         <div className={`object-ref-tag ${type?.replace(/\.+/g, "_") || ""}`}>
-          <FireFilled style={{ color: "rgb(23, 125, 220)" }} />
+          <FireFilled style={{ color: iconColor, marginRight: "0.2rem" }} />
           {type || ""}
         </div>
         <div className={`object-ref-container ${visitor ? "" : "blank"}`}>
