@@ -35,7 +35,7 @@ export const NodeDetails = withStore(
     const comps = useMemo(() => {
       if (curNode?.components) {
         return curNode.components.map((comp) => {
-          return <ComponentPanel key={comp.id} comp={comp} />;
+          return <ComponentPanel key={comp.id} comp={comp} hasEnabled hasLog />;
         });
       } else {
         return null;
@@ -75,7 +75,6 @@ export const NodeDetails = withStore(
                   name: "Node",
                   attrs: curNode.info,
                 }}
-                hasEnabled={false}
               />
             )}
             {/* Component 面板 */}

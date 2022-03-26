@@ -1,8 +1,4 @@
-import {
-  CloseCircleTwoTone,
-  FireFilled,
-  SelectOutlined,
-} from "@ant-design/icons";
+import { CloseOutlined, FireFilled, SelectOutlined } from "@ant-design/icons";
 import { Button, Tooltip } from "antd";
 import React, { useMemo } from "react";
 import { nodeModel } from "../../../../../models/node_model";
@@ -49,9 +45,7 @@ export const ObjectRef = withStore(
               <Button
                 className="object-ref-clear-button"
                 type="text"
-                icon={
-                  <CloseCircleTwoTone twoToneColor={["red", "lightpink"]} />
-                }
+                icon={<CloseOutlined style={{ color: "red" }} />}
                 onClick={() => {
                   onChange();
                 }}
