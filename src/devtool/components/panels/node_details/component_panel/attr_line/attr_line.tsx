@@ -21,6 +21,7 @@ import { ComponentAttr } from "../../../../../../global/component_attr";
 import { NEW_KEY } from "../../../../../../global/new_key";
 import { VISITOR_KEY } from "../../../../../../global/visitor_key";
 import { ColorPicker } from "../color_picker/color_picker";
+import { ComponentPanel } from "../component_panel";
 import { ObjectRef } from "../object_ref/object_ref";
 import "./attr_line.less";
 
@@ -345,6 +346,7 @@ export const AttrLine: FC<{
 }> = ({ name, attr, onChange }) => {
   const {
     type,
+    value,
     tooltip,
     displayName,
     readonly = false,
@@ -357,22 +359,30 @@ export const AttrLine: FC<{
     return targetName.charAt(0).toUpperCase() + targetName.substring(1);
   }, [name, displayName]);
   return hasGetter ? (
-    <div className={`attr-line ${readonly || !hasSetter ? "readonly" : ""}`}>
-      <Tooltip
-        title={
-          tooltip
-            ? tooltip.startsWith("i18n:")
-              ? nameToShow
-              : tooltip
-            : nameToShow
-        }
-      >
-        <div className="attr-line-name">{nameToShow}</div>
-      </Tooltip>
-      <LockOutlined className="lock" />
-      <div className="attr-line-content">
-        {Attr ? <Attr attr={attr} onChange={onChange} /> : JSON.stringify(attr)}
+    type === "subComp" ? (
+      <ComponentPanel comp={{ ...value, name: nameToShow }} hasLog />
+    ) : (
+      <div className={`attr-line ${readonly || !hasSetter ? "readonly" : ""}`}>
+        <Tooltip
+          title={
+            tooltip
+              ? tooltip.startsWith("i18n:")
+                ? nameToShow
+                : tooltip
+              : nameToShow
+          }
+        >
+          <div className="attr-line-name">{nameToShow}</div>
+        </Tooltip>
+        <LockOutlined className="lock" />
+        <div className="attr-line-content">
+          {Attr ? (
+            <Attr attr={attr} onChange={onChange} />
+          ) : (
+            JSON.stringify(attr)
+          )}
+        </div>
       </div>
-    </div>
+    )
   ) : null;
 };

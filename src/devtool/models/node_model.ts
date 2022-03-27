@@ -1,4 +1,5 @@
 import { message } from "antd";
+import { NodeComponent } from "../../global/node_component";
 import { NodeInfo } from "../../global/node_info";
 import { createModel } from "../store/store";
 import {
@@ -52,7 +53,7 @@ export const nodeModel = createModel({
             nodeModel.commands.setNodeAttr({ id: node.id, name, value });
           });
           // 处理节点上的组件
-          node.components.forEach((comp) => {
+          const compHandler = (comp: NodeComponent) => {
             visitorMap[comp.id] = new Visitor(comp, ({ name, value }) => {
               nodeModel.commands.setCompAttr({
                 nodeId: node.id,
@@ -61,7 +62,15 @@ export const nodeModel = createModel({
                 value,
               });
             });
-          });
+            // 遍历 attrs 看看有没有子组件，有的话递归处理
+            for (const name in comp.attrs) {
+              const attr = comp.attrs[name];
+              if (attr.type === "subComp") {
+                compHandler(attr.value);
+              }
+            }
+          };
+          node.components.forEach(compHandler);
           node.children.forEach(handleNode);
         };
         handleNode(tree);

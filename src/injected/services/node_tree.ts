@@ -6,7 +6,6 @@ import { getById, Mutator } from "../utils/mutator";
 import { serializeComponent } from "../utils/serialize_util";
 
 const effects: (() => void)[] = [];
-const regCompName = /^(.*)<(.+)>$/;
 
 function wrapTree(node: BaseNode): NodeInfo {
   const mutatorNode = new Mutator(node);
@@ -82,19 +81,10 @@ function wrapTree(node: BaseNode): NodeInfo {
             },
           }
         : undefined,
-    components: node.components.map((comp) => {
-      const mutatorComp = new Mutator(comp);
-      effects.push(() => {
-        mutatorComp.destroy();
-      });
-      const resultName = regCompName.exec(comp.name);
-      return {
-        id: mutatorComp.id,
-        nodeId: mutatorNode.id,
-        name: (resultName && resultName[2]) || "",
-        enabled: comp.enabled,
-        attrs: serializeComponent(comp),
-      };
+    components: node.components.map((target) => {
+      const { comp, effect } = serializeComponent(target, mutatorNode.id);
+      effects.push(effect);
+      return comp;
     }),
   };
 }

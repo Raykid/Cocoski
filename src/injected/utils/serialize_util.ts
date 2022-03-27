@@ -1,5 +1,6 @@
 import { Component } from "cc";
 import { ComponentAttr } from "../../global/component_attr";
+import { NodeComponent } from "../../global/node_component";
 import { VISITOR_KEY } from "../../global/visitor_key";
 import { getMutator, Mutator } from "./mutator";
 
@@ -8,9 +9,16 @@ type OriginalComponentAttr = Omit<ComponentAttr, "value"> & {
   default?: () => any;
 };
 
+const regCompName = /^(.*)<(.+)>$/;
+
 export function serializeComponent(
-  target: Component
-): Record<string, ComponentAttr> {
+  target: Component,
+  nodeId: string
+): {
+  comp: NodeComponent;
+  effect: () => void;
+} {
+  const effects: (() => void)[] = [];
   const oriAttrMap: Record<string, OriginalComponentAttr> = {};
   const attrs = (target.constructor as any)?.__attrs__;
   for (const key in attrs) {
@@ -42,7 +50,7 @@ export function serializeComponent(
           ? oriAttr.default()
           : undefined;
       const attr = attrMap[name];
-      // 处理 Color 类型
+      // 前置处理
       if (attr.value instanceof window.cc.Color) {
         attr.type = "color";
         attr.value = attr.value._val;
@@ -58,16 +66,23 @@ export function serializeComponent(
       }
       // 类型首字母小写
       attr.type = attr.type.charAt(0).toLowerCase() + attr.type.substring(1);
-      // 特殊处理
+      // 后置处理
       switch (attr.type) {
         case "object":
           attr.valueType =
             attr.value?.__classname__ || ctor?.prototype?.__classname__;
           if (attr.value) {
-            const mutator = getMutator(attr.value) || new Mutator(attr.value);
-            attr.value = {
-              [VISITOR_KEY]: mutator.id,
-            };
+            if (attr.value instanceof (window.cc as any).Object) {
+              const mutator = getMutator(attr.value) || new Mutator(attr.value);
+              attr.value = {
+                [VISITOR_KEY]: mutator.id,
+              };
+            } else {
+              attr.type = "subComp";
+              const { comp, effect } = serializeComponent(attr.value, nodeId);
+              effects.push(effect);
+              attr.value = comp;
+            }
           }
           break;
         default:
@@ -75,5 +90,20 @@ export function serializeComponent(
       }
     }
   }
-  return attrMap;
+
+  const mutator = new Mutator(target);
+  const resultName = regCompName.exec(target.name);
+  return {
+    comp: {
+      id: mutator.id,
+      nodeId: nodeId,
+      name: (resultName && resultName[2]) || "",
+      enabled: target.enabled,
+      attrs: attrMap,
+    },
+    effect: () => {
+      mutator.destroy();
+      effects.splice(0, effects.length).forEach((effect) => effect());
+    },
+  };
 }
