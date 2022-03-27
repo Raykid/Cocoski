@@ -38,7 +38,7 @@ const attrMap: Record<
 
     return (
       <div className="attr-line-number">
-        {slide && min && max && (
+        {slide && min != null && max != null && (
           <Slider
             className="attr-line-number-slider"
             value={value}
@@ -55,8 +55,8 @@ const attrMap: Record<
           title={
             <div>
               <div>Step: {step}</div>
-              {min && <div>Min: {min}</div>}
-              {max && <div>Max: {max}</div>}
+              {min != null && <div>Min: {min}</div>}
+              {max != null && <div>Max: {max}</div>}
             </div>
           }
         >
