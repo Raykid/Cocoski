@@ -8,19 +8,9 @@ type OriginalComponentAttr = Omit<ComponentAttr, "value"> & {
   default?: () => any;
 };
 
-let ccValues: any[];
-
-function isInternalCtor(ctor?: Function): boolean {
-  return ctor != null && ccValues.includes(ctor);
-}
-
 export function serializeComponent(
   target: Component
 ): Record<string, ComponentAttr> {
-  // 先初始化 ccValues
-  if (!ccValues) {
-    ccValues = Object.values(window.cc);
-  }
   const oriAttrMap: Record<string, OriginalComponentAttr> = {};
   const attrs = (target.constructor as any)?.__attrs__;
   for (const key in attrs) {
@@ -58,9 +48,7 @@ export function serializeComponent(
         attr.value = attr.value._val;
       } else if (attr.value instanceof window.cc.ValueType) {
         attr.type = "valueType";
-        const tempCtor = attr.value.constructor;
-        const isInternal = isInternalCtor(tempCtor);
-        attr.valueType = isInternal ? `cc.${tempCtor.name}` : tempCtor.name;
+        attr.valueType = (attr.value as any).__classname__;
       }
       // 没有 type 的，通过 value 猜
       if (!attr.type) {
@@ -73,14 +61,8 @@ export function serializeComponent(
       // 特殊处理
       switch (attr.type) {
         case "object":
-          const tempCtor = ctor || attr.value.constructor;
-          const isInternal = isInternalCtor(tempCtor);
-          attr.valueType = isInternal ? `cc.${tempCtor.name}` : tempCtor?.name;
-          attr.refType = isInternal
-            ? tempCtor.name === "Node"
-              ? "cc.Node"
-              : "internal"
-            : "custom";
+          attr.valueType =
+            attr.value?.__classname__ || ctor?.prototype?.__classname__;
           if (attr.value) {
             const mutator = getMutator(attr.value) || new Mutator(attr.value);
             attr.value = {

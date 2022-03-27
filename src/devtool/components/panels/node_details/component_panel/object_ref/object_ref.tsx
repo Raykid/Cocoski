@@ -6,14 +6,14 @@ import { withStore } from "../../../../../store/store";
 import "./object_ref.less";
 
 export type ObjectRefProps = {
-  refType?: string;
+  refType?: "cc.Node" | "internal" | "custom";
   type?: string;
   id?: string;
   onChange: (id?: string) => void;
 };
 
 export const ObjectRef = withStore(
-  ({ refType, type, id, onChange }: ObjectRefProps) => {
+  ({ refType = "custom", type, id, onChange }: ObjectRefProps) => {
     const { visitorMap } = nodeModel.state;
 
     const visitor = useMemo(() => {
@@ -27,7 +27,6 @@ export const ObjectRef = withStore(
         case "internal":
           return "rgb(23, 125, 220)";
         case "custom":
-        default:
           return "rgb(240, 200, 0)";
       }
     }, [refType]);

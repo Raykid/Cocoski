@@ -297,9 +297,23 @@ const attrMap: Record<
   },
   object: ({ attr, onChange }) => {
     const id = attr.value && attr.value[VISITOR_KEY];
+
+    const refType = useMemo<"cc.Node" | "internal" | "custom">(() => {
+      const { valueType } = attr;
+      if (valueType?.startsWith("cc.")) {
+        if (valueType === "cc.Node") {
+          return "internal";
+        } else {
+          return "cc.Node";
+        }
+      } else {
+        return "custom";
+      }
+    }, [attr.valueType]);
+
     return (
       <ObjectRef
-        refType={attr.refType}
+        refType={refType}
         type={attr.valueType}
         id={id}
         onChange={(id) => {

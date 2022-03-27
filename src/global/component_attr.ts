@@ -17,9 +17,6 @@ export type ComponentAttr = {
   max?: number;
   slide?: boolean;
 
-  // object
-  refType?: string;
-
   // 特殊处理
   value?: any;
   valueType?: string;

@@ -132,6 +132,7 @@ export const NodeTree = withStore(
           <Input
             className="search-bar"
             value={searchStr}
+            placeholder="搜索节点名"
             onChange={(evt) => {
               updateSearchStr(evt.target.value);
             }}
