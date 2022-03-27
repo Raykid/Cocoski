@@ -249,9 +249,10 @@ const attrMap: Record<
 
     const regSingleBit = useMemo(() => /^0*10*$/, []);
 
-    const [enumMap, options] = useMemo(() => {
+    const [enumMap, options, allValue] = useMemo(() => {
       const enumMap: Record<number, string> = {};
       const options: ReactNode[] = [];
+      let allValue = -1;
       for (const temp of attr.bitmaskList || []) {
         if (regSingleBit.test(temp.value.toString(2))) {
           enumMap[temp.value] = temp.name;
@@ -260,9 +261,11 @@ const attrMap: Record<
               {temp.name}
             </Select.Option>
           );
+        } else if (temp.name === "ALL") {
+          allValue = temp.value;
         }
       }
-      return [enumMap, options];
+      return [enumMap, options, allValue];
     }, [attr.bitmaskList, value]);
 
     const values = useMemo(() => {
@@ -277,22 +280,29 @@ const attrMap: Record<
     }, [value, enumMap]);
 
     return (
-      <Select
-        className="attr-line-enum"
-        size="small"
-        mode="multiple"
-        allowClear
-        value={values}
-        onChange={(values) => {
-          const value = values.reduce((value, temp) => {
-            return value | temp;
-          }, 0);
-          updateValue(value);
-          onChange(value);
-        }}
-      >
-        {options}
-      </Select>
+      <Tooltip title={value}>
+        <Select
+          className="attr-line-enum"
+          size="small"
+          mode="multiple"
+          allowClear
+          value={values}
+          onChange={(selected) => {
+            let value = selected.reduce((value, temp) => {
+              return value | temp;
+            }, 0);
+            // 如果全选中了，要使用 allValue
+            if (allValue >= 0 && selected.length === options.length) {
+              value = allValue;
+            }
+
+            updateValue(value);
+            onChange(value);
+          }}
+        >
+          {options}
+        </Select>
+      </Tooltip>
     );
   },
   object: ({ attr, onChange }) => {
